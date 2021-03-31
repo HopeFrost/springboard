@@ -98,18 +98,31 @@ facility, the name of the member formatted as a single column, and the cost.
 Order by descending cost, and do not use any subqueries. */
 
 SELECT f.name, CONCAT_WS(' ', m.firstname, m.surname) AS name, 
-CASE WHEN membercost * slots > 30 THEN membercost * slots
-	WHEN m.memid = 0 AND guestcost * slots > 30 THEN guestcost *slots
+CASE WHEN f.membercost * b.slots > 30 THEN f.membercost * b.slots
+	WHEN m.memid = 0 AND guestcost * slots > 30 THEN f.guestcost * b.slots
 	 END AS cost
 FROM Bookings AS b
 LEFT JOIN Members AS m USING(memid)
 LEFT JOIN Facilities AS f USING(facid)
 WHERE b.starttime LIKE "2012-09-14%"
-AND (membercost * slots > 30 OR m.memid = 0 AND guestcost * slots > 30);
+AND (membercost * slots > 30 OR m.memid = 0 AND guestcost * slots > 30)
+ORDER BY cost DESC;
  
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
+SELECT name AS facility, CONCAT_WS(' ', firstname, surname) AS name, cost
+FROM(SELECT firstname, surname, name, starttime,
+	CASE WHEN f.membercost * b.slots > 30 THEN f.membercost * b.slots
+	WHEN m.memid = 0 AND guestcost * slots > 30 THEN f.guestcost * b.slots
+	 END AS cost
+	FROM Bookings AS b
+	LEFT JOIN Members AS m ON b.memid = m.memid
+	LEFT JOIN Facilities AS f ON b.facid =f.facid
+    ) AS inner_table
+WHERE cost > 30
+AND starttime LIKE "2012-09-14%"
+ORDER BY cost DESC;
 
 /* PART 2: SQLite
 
